@@ -4,16 +4,6 @@ Small Ruby helper for Jira Cloud comments. It provides basic Jira comment CRUD, 
 
 ## Install
 
-Current GitHub source install, until the RubyGems release exists:
-
-```ruby
-gem "klondikemarlen-jira-api",
-  git: "https://github.com/klondikemarlen/jira-api.git",
-  branch: "main"
-```
-
-After publishing version `0.1.0` to RubyGems:
-
 ```ruby
 gem "klondikemarlen-jira-api", "~> 0.1.0"
 ```

@@ -60,5 +60,5 @@ Preferred flow for issue and feature work:
 4. For releasable changes, bump `Klondikemarlen::JiraApi::VERSION` before opening the release PR.
 5. Open a draft PR, link the issue, include the checks run, and mark it ready only after verification.
 6. Merge the PR to `main` so GitHub records the review path.
-7. Publish to RubyGems when the merged change should be released as a gem version.
-8. Verify the live artifact after publishing with `gem list --remote klondikemarlen-jira-api --exact` and an install or CLI smoke check.
+7. After merge, build and publish the gem version to RubyGems with `gem build klondikemarlen-jira-api.gemspec` and `gem push klondikemarlen-jira-api-<version>.gem`.
+8. Verify RubyGems lists the released version with `gem list --remote klondikemarlen-jira-api --exact --all`, then run an install or CLI smoke check.

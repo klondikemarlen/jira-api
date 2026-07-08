@@ -9,7 +9,7 @@ Current GitHub source install, until the RubyGems release exists:
 ```ruby
 gem "klondikemarlen-jira-api",
   git: "https://github.com/klondikemarlen/jira-api.git",
-  ref: "6a6e8e4"
+  branch: "main"
 ```
 
 After publishing version `0.1.0` to RubyGems:

@@ -18,9 +18,9 @@ Gem::Specification.new do |spec|
   spec.metadata["source_code_uri"] = spec.homepage
 
   spec.files = Dir.chdir(__dir__) do
-    Dir["lib/**/*.rb", "exe/*", "README.md", "LICENSE.txt"]
+    Dir["lib/**/*.rb", "bin/*", "README.md", "LICENSE.txt"]
   end
-  spec.bindir = "exe"
+  spec.bindir = "bin"
   spec.executables = ["jira-comment"]
   spec.require_paths = ["lib"]
 
@@ -29,5 +29,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "fastimage", "~> 2.4"
   spec.add_dependency "multipart-post", "~> 2.4"
 
-  spec.add_development_dependency "minitest", "~> 5.25"
+  spec.add_development_dependency "rspec", "~> 3.13"
 end

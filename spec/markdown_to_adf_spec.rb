@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
+require_relative "spec_helper"
 
-class MarkdownToAdfTest < Minitest::Test
-  def test_when_markdown_has_heading_list_marks_and_images_then_adf_preserves_structure
+RSpec.describe Klondikemarlen::JiraApi::MarkdownToAdf do
+  it "preserves headings, lists, marks, and images when converting markdown to ADF" do
     # Arrange
     captured_images = []
     markdown = <<~MARKDOWN
@@ -18,9 +18,9 @@ class MarkdownToAdfTest < Minitest::Test
     MARKDOWN
 
     # Act
-    document = Klondikemarlen::JiraApi::MarkdownToAdf.call(markdown) do |image|
+    document = described_class.call(markdown) do |image|
       captured_images << image
-      Klondikemarlen::JiraApi::MarkdownToAdf.media_single(
+      described_class.media_single(
         id: "attachment-#{captured_images.length}",
         alt: image[:alt].to_s.empty? ? "image" : image[:alt],
         width: 640,
@@ -30,19 +30,16 @@ class MarkdownToAdfTest < Minitest::Test
 
     # Assert
     content_types = document.fetch("content").map { |node| node.fetch("type") }
-    assert_equal(
-      {
-        content_types: ["heading", "orderedList", "mediaSingle", "mediaSingle"],
-        image_count: 2,
-        html_image_width: "100%",
-        html_image_height: "300",
-      },
-      {
-        content_types: content_types,
-        image_count: captured_images.length,
-        html_image_width: captured_images.first.fetch(:width),
-        html_image_height: captured_images.first.fetch(:height),
-      }
+    expect(
+      content_types: content_types,
+      image_count: captured_images.length,
+      html_image_width: captured_images.first.fetch(:width),
+      html_image_height: captured_images.first.fetch(:height)
+    ).to eq(
+      content_types: ["heading", "orderedList", "mediaSingle", "mediaSingle"],
+      image_count: 2,
+      html_image_width: "100%",
+      html_image_height: "300"
     )
   end
 end

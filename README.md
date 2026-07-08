@@ -2,10 +2,12 @@
 
 Small Ruby helper for Jira Cloud comments. It provides basic Jira comment CRUD, converts Markdown to Atlassian Document Format, and can upload allowed remote images as Jira issue attachments.
 
+[RubyGems: `klondikemarlen-jira-api`](https://rubygems.org/gems/klondikemarlen-jira-api)
+
 ## Install
 
 ```ruby
-gem "klondikemarlen-jira-api", "~> 0.1.0"
+gem "klondikemarlen-jira-api", "~> 0.1.1"
 ```
 
 ## Ruby API
@@ -22,8 +24,7 @@ comment = client.get_comment(issue_key: "WRAPX-123", comment_id: "10001")
 
 created = client.create_markdown_comment(
   issue_key: "WRAPX-123",
-  markdown: "# Release notes\n\n1. Verify `code` and **bold** text.",
-  allowed_image_hosts: ["github.com", "user-images.githubusercontent.com"]
+  markdown: "# Release notes\n\n1. Verify `code` and **bold** text."
 )
 
 client.update_markdown_comment(
@@ -42,7 +43,22 @@ Credentials are read from `JIRA_BASE_URL`, `JIRA_EMAIL`, and `JIRA_API_TOKEN`.
 ```bash
 jira-comment list --issue-key WRAPX-123
 jira-comment get --issue-key WRAPX-123 --comment-id 10001
-jira-comment create --issue-key WRAPX-123 --markdown-file pr-body.md --image-host github.com
+jira-comment create --issue-key WRAPX-123 --markdown-file pr-body.md
 jira-comment update --issue-key WRAPX-123 --comment-id 10001 --markdown-file edited.md
 jira-comment delete --issue-key WRAPX-123 --comment-id 10001
 ```
+
+Remote Markdown image URLs are advanced opt-in behavior. Pass `allowed_image_hosts:` in Ruby or repeat `--image-host` in the CLI only when you intentionally want the gem to fetch images from trusted hosts, upload them to Jira, and convert them into Jira media attachments.
+
+## Feature and Issue Workflow
+
+Preferred flow for issue and feature work:
+
+1. Create or identify the GitHub issue with the user story and acceptance criteria.
+2. Branch from current `main` using the issue number and a short slug before editing when possible. If scoped work already exists locally, create the issue-named branch before committing.
+3. Make the smallest change that resolves the request, including tests and README updates that must stay in sync.
+4. For releasable changes, bump `Klondikemarlen::JiraApi::VERSION` before opening the release PR.
+5. Open a draft PR, link the issue, include the checks run, and mark it ready only after verification.
+6. Merge the PR to `main` so GitHub records the review path.
+7. Publish to RubyGems when the merged change should be released as a gem version.
+8. Verify the live artifact after publishing with `gem list --remote klondikemarlen-jira-api --exact` and an install or CLI smoke check.

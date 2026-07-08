@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "json"
+require "optparse"
+require "klondikemarlen/jira_api"
+
+VALID_COMMANDS = %w[list get create update delete].freeze
+
+def require_options!(options, *keys)
+  missing = keys.select { |key| options[key].to_s.empty? }
+  return if missing.empty?
+
+  abort("Missing required option(s): #{missing.map { |key| "--#{key.to_s.tr("_", "-")}" }.join(", ")}")
+end
+
+def jira_client
+  Klondikemarlen::JiraApi::Client.new(
+    base_url: ENV.fetch("JIRA_BASE_URL"),
+    email: ENV.fetch("JIRA_EMAIL"),
+    api_token: ENV.fetch("JIRA_API_TOKEN")
+  )
+end
+
+command = ARGV.shift
+abort "Unknown command #{command.inspect}. Expected one of: #{VALID_COMMANDS.join(", ")}" unless VALID_COMMANDS.include?(command)
+
+options = { allowed_image_hosts: [] }
+OptionParser.new do |parser|
+  parser.banner = "Usage: jira-comment [list|get|create|update|delete] [options]"
+  parser.on("--issue-key ISSUE", "Jira issue key") { |value| options[:issue_key] = value }
+  parser.on("--comment-id ID", "Jira comment ID") { |value| options[:comment_id] = value }
+  parser.on("--markdown-file FILE", "Markdown file for create/update") { |value| options[:markdown_file] = value }
+  parser.on("--image-host HOST", "Allowed remote image host; repeatable") do |value|
+    options[:allowed_image_hosts] << value
+  end
+end.parse!
+
+case command
+when "list"
+  require_options!(options, :issue_key)
+  puts JSON.pretty_generate(jira_client.list_comments(issue_key: options.fetch(:issue_key)))
+when "get"
+  require_options!(options, :issue_key, :comment_id)
+  puts JSON.pretty_generate(
+    jira_client.get_comment(issue_key: options.fetch(:issue_key), comment_id: options.fetch(:comment_id))
+  )
+when "create"
+  require_options!(options, :issue_key, :markdown_file)
+  result = jira_client.create_markdown_comment(
+    issue_key: options.fetch(:issue_key),
+    markdown: File.read(options.fetch(:markdown_file)),
+    allowed_image_hosts: options.fetch(:allowed_image_hosts)
+  )
+  puts JSON.pretty_generate(result)
+when "update"
+  require_options!(options, :issue_key, :comment_id, :markdown_file)
+  result = jira_client.update_markdown_comment(
+    issue_key: options.fetch(:issue_key),
+    comment_id: options.fetch(:comment_id),
+    markdown: File.read(options.fetch(:markdown_file)),
+    allowed_image_hosts: options.fetch(:allowed_image_hosts)
+  )
+  puts JSON.pretty_generate(result)
+when "delete"
+  require_options!(options, :issue_key, :comment_id)
+  jira_client.delete_comment(issue_key: options.fetch(:issue_key), comment_id: options.fetch(:comment_id))
+  puts JSON.pretty_generate({ deleted: true })
+end

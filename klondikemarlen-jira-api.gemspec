@@ -24,6 +24,7 @@ Gem::Specification.new do |spec|
   spec.executables = ["jira-comment"]
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "base64", "~> 0.2"
   spec.add_dependency "commonmarker", "~> 2.8"
   spec.add_dependency "fastimage", "~> 2.4"
   spec.add_dependency "multipart-post", "~> 2.4"

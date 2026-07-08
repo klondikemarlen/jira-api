@@ -7,11 +7,15 @@ require_relative "test_helper"
 class CliTest < Minitest::Test
   EXECUTABLE = File.expand_path("../exe/jira-comment", __dir__)
 
-  def around
-    original_argv = ARGV.dup
-    yield
-  ensure
-    ARGV.replace(original_argv)
+  def setup
+    @original_argv = ARGV.dup
+    @original_jira_environment = ENV.slice("JIRA_BASE_URL", "JIRA_EMAIL", "JIRA_API_TOKEN")
+  end
+
+  def teardown
+    ARGV.replace(@original_argv)
+    %w[JIRA_BASE_URL JIRA_EMAIL JIRA_API_TOKEN].each { |key| ENV.delete(key) }
+    @original_jira_environment.each { |key, value| ENV[key] = value }
   end
 
   def test_when_command_is_unknown_then_exits_before_requiring_credentials
@@ -20,7 +24,7 @@ class CliTest < Minitest::Test
 
     # Act
     _, stderr = capture_io do
-      assert_raises(SystemExit) { load EXECUTABLE }
+      assert_raises(SystemExit) { load EXECUTABLE, true }
     end
 
     # Assert
@@ -33,7 +37,7 @@ class CliTest < Minitest::Test
 
     # Act
     _, stderr = capture_io do
-      assert_raises(SystemExit) { load EXECUTABLE }
+      assert_raises(SystemExit) { load EXECUTABLE, true }
     end
 
     # Assert
@@ -63,22 +67,27 @@ class CliTest < Minitest::Test
         "allowed_image_hosts" => allowed_image_hosts,
       }
     end
-    Klondikemarlen::JiraApi::Client.stub(:new, fake_client) do
-      # Act
-      stdout, = capture_io { load EXECUTABLE }
+    original_new = Klondikemarlen::JiraApi::Client.method(:new)
+    Klondikemarlen::JiraApi::Client.define_singleton_method(:new) { |**| fake_client }
+    ENV["JIRA_BASE_URL"] = "https://example.atlassian.net"
+    ENV["JIRA_EMAIL"] = "user@example.com"
+    ENV["JIRA_API_TOKEN"] = "token"
 
-      # Assert
-      assert_equal(
-        {
-          "id" => "10001",
-          "issue_key" => "WRAPX-123",
-          "markdown" => "# Heading",
-          "allowed_image_hosts" => ["github.com"],
-        },
-        JSON.parse(stdout)
-      )
-    end
+    # Act
+    stdout, = capture_io { load EXECUTABLE, true }
+
+    # Assert
+    assert_equal(
+      {
+        "id" => "10001",
+        "issue_key" => "WRAPX-123",
+        "markdown" => "# Heading",
+        "allowed_image_hosts" => ["github.com"],
+      },
+      JSON.parse(stdout)
+    )
   ensure
+    Klondikemarlen::JiraApi::Client.define_singleton_method(:new, original_new) if original_new
     markdown_file&.unlink
   end
 end

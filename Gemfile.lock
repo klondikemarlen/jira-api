@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     klondikemarlen-jira-api (0.1.0)
+      base64 (~> 0.2)
       commonmarker (~> 2.8)
       fastimage (~> 2.4)
       multipart-post (~> 2.4)
@@ -9,6 +10,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    base64 (0.3.0)
     commonmarker (2.8.3-aarch64-linux)
     commonmarker (2.8.3-aarch64-linux-musl)
     commonmarker (2.8.3-arm-linux)
@@ -34,6 +36,7 @@ DEPENDENCIES
   minitest (~> 5.25)
 
 CHECKSUMS
+  base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   commonmarker (2.8.3-aarch64-linux) sha256=e1dc00363acc6795cdbf4f5131d9daef4e3ca08102f9a7577ea47d9ba4d4b7d6
   commonmarker (2.8.3-aarch64-linux-musl) sha256=362302bf9b7520e9c0527f4c1a428c6c14d530361b982ae86ad670c29a2cb0dc
   commonmarker (2.8.3-arm-linux) sha256=63903a4d8cd82b6681e88f2bdf6df7d51d0a241009a80fdc7ac6cf9c784f6cab

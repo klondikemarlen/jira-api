@@ -37,14 +37,14 @@ module Marlens
 
         @out.puts JSON.pretty_generate(send(config.fetch(:action), options))
         0
-      rescue OptionParser::ParseError, KeyError => error
+      rescue OptionParser::ParseError, KeyError, ImageUploadError => error
         fail_with(error.message)
       end
 
       private
 
       def parse_options
-        options = { allowed_image_hosts: [] }
+        options = { allowed_image_hosts: [], strict_images: false }
         parser = OptionParser.new do |parser|
           parser.banner = "Usage: jira-comment [#{COMMANDS.keys.join("|")}] [options]"
           parser.on("--issue-key ISSUE", "Jira issue key") { |value| options[:issue_key] = value }
@@ -52,6 +52,9 @@ module Marlens
           parser.on("--markdown-file FILE", "Markdown file for create/update") { |value| options[:markdown_file] = value }
           parser.on("--image-host HOST", "Allowed remote image host; repeatable") do |value|
             options[:allowed_image_hosts] << value
+          end
+          parser.on("--strict-images", "Fail create/update when a remote image cannot be uploaded") do
+            options[:strict_images] = true
           end
         end
         parser.parse!(@argv)
@@ -67,25 +70,39 @@ module Marlens
       end
 
       def create_comment(options)
-        client.create_markdown_comment(
+        image_upload_failures = []
+        result = client.create_markdown_comment(
           issue_key: options.fetch(:issue_key),
           markdown: File.read(options.fetch(:markdown_file)),
-          allowed_image_hosts: options.fetch(:allowed_image_hosts)
+          allowed_image_hosts: options.fetch(:allowed_image_hosts),
+          strict_images: options.fetch(:strict_images),
+          image_upload_failures: image_upload_failures
         )
+        result_with_image_failures(result, image_upload_failures)
       end
 
       def update_comment(options)
-        client.update_markdown_comment(
+        image_upload_failures = []
+        result = client.update_markdown_comment(
           issue_key: options.fetch(:issue_key),
           comment_id: options.fetch(:comment_id),
           markdown: File.read(options.fetch(:markdown_file)),
-          allowed_image_hosts: options.fetch(:allowed_image_hosts)
+          allowed_image_hosts: options.fetch(:allowed_image_hosts),
+          strict_images: options.fetch(:strict_images),
+          image_upload_failures: image_upload_failures
         )
+        result_with_image_failures(result, image_upload_failures)
       end
 
       def delete_comment(options)
         client.delete_comment(issue_key: options.fetch(:issue_key), comment_id: options.fetch(:comment_id))
         { deleted: true }
+      end
+
+      def result_with_image_failures(result, image_upload_failures)
+        return result if image_upload_failures.empty?
+
+        result.merge("image_upload_failures" => image_upload_failures)
       end
 
       def client

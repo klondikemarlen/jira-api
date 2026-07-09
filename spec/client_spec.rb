@@ -150,6 +150,77 @@ RSpec.describe Marlens::JiraApi::Client do
     )
   end
 
+
+  it "records markdown image upload failures when creating a comment" do
+    # Arrange
+    client = client_class.new(response: Response.new("201", '{"id":"10001"}'))
+    failures = []
+    url = "https://github.com/user-attachments/assets/missing"
+    allow(Net::HTTP).to receive(:get_response).and_return(Net::HTTPNotFound.new("1.1", "404", "Not Found"))
+
+    # Act
+    result = nil
+    silence_stderr do
+      result = client.create_markdown_comment(
+        issue_key: "WRAPX-123",
+        markdown: "![Screenshot](#{url})",
+        allowed_image_hosts: ["github.com"],
+        image_upload_failures: failures
+      )
+    end
+
+    # Assert
+    request = client.requests.fetch(0).fetch(:request)
+    body = JSON.parse(request.body).fetch("body")
+    expect(
+      result: result,
+      posted_text: body.fetch("content").fetch(0).fetch("content").fetch(0).fetch("text"),
+      failures: failures
+    ).to eq(
+      result: { "id" => "10001" },
+      posted_text: "Screenshot: #{url}",
+      failures: [
+        {
+          url: url,
+          alt: "Screenshot",
+          error_class: "RuntimeError",
+          error_message: "Failed to fetch image: 404 Not Found",
+        },
+      ]
+    )
+  end
+
+  it "raises markdown image upload failures when updating in strict mode" do
+    # Arrange
+    client = client_class.new(response: Response.new("200", '{"id":"10001"}'))
+    failures = []
+    url = "https://github.com/user-attachments/assets/missing"
+    allow(Net::HTTP).to receive(:get_response).and_return(Net::HTTPNotFound.new("1.1", "404", "Not Found"))
+    expected_failure = {
+      url: url,
+      alt: "Screenshot",
+      error_class: "RuntimeError",
+      error_message: "Failed to fetch image: 404 Not Found",
+    }
+
+    # Act / Assert
+    expect do
+      client.update_markdown_comment(
+        issue_key: "WRAPX-123",
+        comment_id: "10001",
+        markdown: "![Screenshot](#{url})",
+        allowed_image_hosts: ["github.com"],
+        strict_images: true,
+        image_upload_failures: failures
+      )
+    end.to raise_error(Marlens::JiraApi::ImageUploadError) { |error|
+      expect(error.message).to eq("Failed to upload image #{url}: RuntimeError: Failed to fetch image: 404 Not Found")
+      expect(error.failure).to eq(expected_failure)
+    }
+    expect(client.requests).to eq([])
+    expect(failures).to eq([expected_failure])
+  end
+
   it "deletes the specific comment endpoint when deleting a comment" do
     # Arrange
     client = client_class.new(response: Response.new("204", ""))
@@ -168,5 +239,12 @@ RSpec.describe Marlens::JiraApi::Client do
       path: "/rest/api/3/issue/WRAPX-123/comment/10001",
       result: true
     )
+  end
+  def silence_stderr
+    original_stderr = $stderr
+    $stderr = StringIO.new
+    yield
+  ensure
+    $stderr = original_stderr
   end
 end

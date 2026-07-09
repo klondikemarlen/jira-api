@@ -54,7 +54,7 @@ RSpec.describe Marlens::JiraApi::CLI do
     markdown_file.write("# Heading")
     markdown_file.close
     client = Class.new do
-      def create_markdown_comment(issue_key:, markdown:, allowed_image_hosts:)
+      def create_markdown_comment(issue_key:, markdown:, allowed_image_hosts:, **_options)
         created_comment = {
           "issue_key" => issue_key,
           "markdown" => markdown,
@@ -90,6 +90,174 @@ RSpec.describe Marlens::JiraApi::CLI do
       "allowed_image_hosts" => ["github.com"]
     )
     expect(errors.string).to eq("")
+  ensure
+    markdown_file&.unlink
+  end
+
+  it "passes strict image mode to the client when creating a comment" do
+    # Arrange
+    markdown_file = Tempfile.new("jira-comment")
+    markdown_file.write("![Screenshot](https://github.com/user-attachments/assets/missing)")
+    markdown_file.close
+    client = Class.new do
+      def create_markdown_comment(issue_key:, markdown:, allowed_image_hosts:, strict_images:, image_upload_failures:)
+        {
+          "id" => "10001",
+          "issue_key" => issue_key,
+          "markdown" => markdown,
+          "allowed_image_hosts" => allowed_image_hosts,
+          "strict_images" => strict_images,
+          "image_upload_failures" => image_upload_failures,
+        }
+      end
+    end.new
+    arguments = [
+      "create",
+      "--issue-key", "WRAPX-123",
+      "--markdown-file", markdown_file.path,
+      "--image-host", "github.com",
+      "--strict-images",
+    ]
+
+    # Act
+    exit_code = run_cli(arguments, client: client)
+
+    # Assert
+    expect(exit_code).to eq(0)
+    expect(JSON.parse(output.string)).to eq(
+      "id" => "10001",
+      "issue_key" => "WRAPX-123",
+      "markdown" => "![Screenshot](https://github.com/user-attachments/assets/missing)",
+      "allowed_image_hosts" => ["github.com"],
+      "strict_images" => true,
+      "image_upload_failures" => []
+    )
+    expect(errors.string).to eq("")
+  ensure
+    markdown_file&.unlink
+  end
+
+  it "passes strict image mode to the client when updating a comment" do
+    # Arrange
+    markdown_file = Tempfile.new("jira-comment")
+    markdown_file.write("![Screenshot](https://github.com/user-attachments/assets/missing)")
+    markdown_file.close
+    client = Class.new do
+      def update_markdown_comment(issue_key:, comment_id:, markdown:, allowed_image_hosts:, strict_images:, image_upload_failures:)
+        {
+          "id" => comment_id,
+          "issue_key" => issue_key,
+          "markdown" => markdown,
+          "allowed_image_hosts" => allowed_image_hosts,
+          "strict_images" => strict_images,
+          "image_upload_failures" => image_upload_failures,
+        }
+      end
+    end.new
+    arguments = [
+      "update",
+      "--issue-key", "WRAPX-123",
+      "--comment-id", "10001",
+      "--markdown-file", markdown_file.path,
+      "--image-host", "github.com",
+      "--strict-images",
+    ]
+
+    # Act
+    exit_code = run_cli(arguments, client: client)
+
+    # Assert
+    expect(exit_code).to eq(0)
+    expect(JSON.parse(output.string)).to eq(
+      "id" => "10001",
+      "issue_key" => "WRAPX-123",
+      "markdown" => "![Screenshot](https://github.com/user-attachments/assets/missing)",
+      "allowed_image_hosts" => ["github.com"],
+      "strict_images" => true,
+      "image_upload_failures" => []
+    )
+    expect(errors.string).to eq("")
+  ensure
+    markdown_file&.unlink
+  end
+
+  it "prints image upload failures when degraded create succeeds" do
+    # Arrange
+    markdown_file = Tempfile.new("jira-comment")
+    markdown_file.write("![Screenshot](https://github.com/user-attachments/assets/missing)")
+    markdown_file.close
+    url = "https://github.com/user-attachments/assets/missing"
+    client = Class.new do
+      define_method(:create_markdown_comment) do |image_upload_failures:, **|
+        image_upload_failures << {
+          url: url,
+          alt: "Screenshot",
+          error_class: "RuntimeError",
+          error_message: "Failed to fetch image: 404 Not Found",
+        }
+        { "id" => "10001" }
+      end
+    end.new
+    arguments = [
+      "create",
+      "--issue-key", "WRAPX-123",
+      "--markdown-file", markdown_file.path,
+      "--image-host", "github.com",
+    ]
+
+    # Act
+    exit_code = run_cli(arguments, client: client)
+
+    # Assert
+    expect(exit_code).to eq(0)
+    expect(JSON.parse(output.string)).to eq(
+      "id" => "10001",
+      "image_upload_failures" => [
+        {
+          "url" => url,
+          "alt" => "Screenshot",
+          "error_class" => "RuntimeError",
+          "error_message" => "Failed to fetch image: 404 Not Found",
+        },
+      ]
+    )
+    expect(errors.string).to eq("")
+  ensure
+    markdown_file&.unlink
+  end
+
+  it "returns exit 1 when strict image upload fails" do
+    # Arrange
+    markdown_file = Tempfile.new("jira-comment")
+    markdown_file.write("![Screenshot](https://github.com/user-attachments/assets/missing)")
+    markdown_file.close
+    url = "https://github.com/user-attachments/assets/missing"
+    client = Class.new do
+      define_method(:create_markdown_comment) do |**|
+        failure = {
+          url: url,
+          alt: "Screenshot",
+          error_class: "RuntimeError",
+          error_message: "Failed to fetch image: 404 Not Found",
+        }
+        raise Marlens::JiraApi::ImageUploadError.new(failure)
+      end
+    end.new
+    arguments = [
+      "create",
+      "--issue-key", "WRAPX-123",
+      "--markdown-file", markdown_file.path,
+      "--image-host", "github.com",
+      "--strict-images",
+    ]
+
+    # Act
+    exit_code = run_cli(arguments, client: client)
+
+    # Assert
+    expect(exit_code).to eq(1)
+    expect(output.string).to eq("")
+    expect(errors.string).to eq("Failed to upload image #{url}: RuntimeError: Failed to fetch image: 404 Not Found\n")
   ensure
     markdown_file&.unlink
   end

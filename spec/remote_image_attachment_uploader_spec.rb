@@ -48,6 +48,75 @@ RSpec.describe Marlens::JiraApi::RemoteImageAttachmentUploader do
     )
   end
 
+  it "records failure metadata when a GitHub user attachment cannot be fetched" do
+    # Arrange
+    client = FakeClient.new
+    failures = []
+    url = "https://github.com/user-attachments/assets/missing"
+    uploader = described_class.new(
+      client: client,
+      issue_key: "WRAPX-123",
+      allowed_hosts: ["github.com"],
+      failures: failures
+    )
+    allow(Net::HTTP).to receive(:get_response).and_return(Net::HTTPNotFound.new("1.1", "404", "Not Found"))
+
+    # Act
+    result = nil
+    capture_stderr do
+      result = uploader.media_node_for(url: url, alt: "Screenshot")
+    end
+
+    # Assert
+    expect(
+      result_text: result.fetch("content").fetch(0).fetch("text"),
+      uploaded: client.uploaded,
+      failures: failures
+    ).to eq(
+      result_text: "Screenshot: #{url}",
+      uploaded: nil,
+      failures: [
+        {
+          url: url,
+          alt: "Screenshot",
+          error_class: "RuntimeError",
+          error_message: "Failed to fetch image: 404 Not Found",
+        },
+      ]
+    )
+  end
+
+  it "raises image fetch failures in strict mode" do
+    # Arrange
+    client = FakeClient.new
+    failures = []
+    url = "https://github.com/user-attachments/assets/missing"
+    uploader = described_class.new(
+      client: client,
+      issue_key: "WRAPX-123",
+      allowed_hosts: ["github.com"],
+      strict: true,
+      failures: failures
+    )
+    allow(Net::HTTP).to receive(:get_response).and_return(Net::HTTPNotFound.new("1.1", "404", "Not Found"))
+    expected_failure = {
+      url: url,
+      alt: "Screenshot",
+      error_class: "RuntimeError",
+      error_message: "Failed to fetch image: 404 Not Found",
+    }
+
+    # Act / Assert
+    expect do
+      uploader.media_node_for(url: url, alt: "Screenshot")
+    end.to raise_error(Marlens::JiraApi::ImageUploadError) { |error|
+      expect(error.message).to eq("Failed to upload image #{url}: RuntimeError: Failed to fetch image: 404 Not Found")
+      expect(error.failure).to eq(expected_failure)
+    }
+    expect(client.uploaded).to be_nil
+    expect(failures).to eq([expected_failure])
+  end
+
   it "returns Jira-hosted external media after uploading an allowed image" do
     # Arrange
     client = FakeClient.new

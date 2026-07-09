@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module Klondikemarlen
+module Marlens
   module JiraApi
-    VERSION = "0.1.1"
+    VERSION = "0.5.0"
   end
 end

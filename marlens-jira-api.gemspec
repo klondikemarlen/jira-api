@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "lib/klondikemarlen/jira_api/version"
+require_relative "lib/marlens/jira_api/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "klondikemarlen-jira-api"
-  spec.version = Klondikemarlen::JiraApi::VERSION
+  spec.name = "marlens-jira-api"
+  spec.version = Marlens::JiraApi::VERSION
   spec.authors = ["Marlen Brunner"]
   spec.email = ["klondikemarlen@gmail.com"]
 

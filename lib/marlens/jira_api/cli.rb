@@ -3,7 +3,7 @@
 require "json"
 require "optparse"
 
-module Klondikemarlen
+module Marlens
   module JiraApi
     class CLI
       COMMANDS = {

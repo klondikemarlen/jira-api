@@ -1,19 +1,19 @@
-# Klondikemarlen Jira API
+# Marlens Jira API
 
 Small Ruby helper for Jira Cloud comments. It provides basic Jira comment CRUD, converts Markdown to Atlassian Document Format, and can upload allowed remote images as Jira issue attachments.
 
-[RubyGems: `klondikemarlen-jira-api`](https://rubygems.org/gems/klondikemarlen-jira-api)
+[RubyGems: `marlens-jira-api`](https://rubygems.org/gems/marlens-jira-api)
 
 ## Install
 
 ```ruby
-gem "klondikemarlen-jira-api", "~> 0.1.1"
+gem "marlens-jira-api", "~> 0.5"
 ```
 
 ## Ruby API
 
 ```ruby
-client = Klondikemarlen::JiraApi::Client.new(
+client = Marlens::JiraApi::Client.new(
   base_url: ENV.fetch("JIRA_BASE_URL"),
   email: ENV.fetch("JIRA_EMAIL"),
   api_token: ENV.fetch("JIRA_API_TOKEN")
@@ -57,8 +57,8 @@ Preferred flow for issue and feature work:
 1. Create or identify the GitHub issue with the user story and acceptance criteria.
 2. Branch from current `main` using the issue number and a short slug before editing when possible. If scoped work already exists locally, create the issue-named branch before committing.
 3. Make the smallest change that resolves the request, including tests and README updates that must stay in sync.
-4. For releasable changes, bump `Klondikemarlen::JiraApi::VERSION` before opening the release PR.
+4. For releasable changes, bump `Marlens::JiraApi::VERSION` before opening the release PR.
 5. Open a draft PR, link the issue, include the checks run, and mark it ready only after verification.
 6. Merge the PR to `main` so GitHub records the review path.
-7. After merge, build and publish the gem version to RubyGems with `gem build klondikemarlen-jira-api.gemspec` and `gem push klondikemarlen-jira-api-<version>.gem`.
-8. Verify RubyGems lists the released version with `gem list --remote klondikemarlen-jira-api --exact --all`, then run an install or CLI smoke check.
+7. After merge, build and publish the gem version to RubyGems with `gem build marlens-jira-api.gemspec` and `gem push marlens-jira-api-<version>.gem`.
+8. Verify RubyGems lists the released version with `gem list --remote marlens-jira-api --exact --all`, then run an install or CLI smoke check.

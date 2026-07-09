@@ -6,7 +6,7 @@ require "multipart/post"
 require "net/http"
 require "uri"
 
-module Klondikemarlen
+module Marlens
   module JiraApi
     class Client
       def initialize(base_url:, email:, api_token:)

@@ -2,7 +2,7 @@
 
 require "commonmarker"
 
-module Klondikemarlen
+module Marlens
   module JiraApi
     class MarkdownToAdf
       IMAGE_TAG_PATTERN = /<img\b(?<attributes>[^>]+)>/i

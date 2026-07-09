@@ -5,7 +5,7 @@ require "net/http"
 require "tempfile"
 require "uri"
 
-module Klondikemarlen
+module Marlens
   module JiraApi
     class RemoteImageAttachmentUploader
       MAX_REDIRECTS = 5

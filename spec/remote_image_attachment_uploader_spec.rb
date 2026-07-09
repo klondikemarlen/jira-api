@@ -2,7 +2,7 @@
 
 require_relative "spec_helper"
 
-RSpec.describe Klondikemarlen::JiraApi::RemoteImageAttachmentUploader do
+RSpec.describe Marlens::JiraApi::RemoteImageAttachmentUploader do
   FakeClient = Struct.new(:uploaded) do
     def upload_attachment(issue_key:, io:, filename:, content_type:)
       self.uploaded = { issue_key: issue_key, filename: filename, content_type: content_type, bytes: io.read.bytesize }

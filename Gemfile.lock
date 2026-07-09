@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    klondikemarlen-jira-api (0.1.1)
+    marlens-jira-api (0.5.0)
       base64 (~> 0.2)
       commonmarker (~> 2.8)
       fastimage (~> 2.4)
@@ -45,7 +45,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  klondikemarlen-jira-api!
+  marlens-jira-api!
   rspec (~> 3.13)
 
 CHECKSUMS
@@ -59,7 +59,7 @@ CHECKSUMS
   commonmarker (2.8.3-x86_64-linux-musl) sha256=0a42f71205697edf8a488b50b6209b9cee882c39f8b18ac0a323be83ff17b250
   diff-lcs (1.6.2) sha256=9ae0d2cba7d4df3075fe8cd8602a8604993efc0dfa934cff568969efb1909962
   fastimage (2.4.1) sha256=c64bebd46b6fd8943ab70c1e6e85ff728f970f2e48f92ecd249b6bc3a540ad20
-  klondikemarlen-jira-api (0.1.1)
+  marlens-jira-api (0.5.0)
   multipart-post (2.4.1) sha256=9872d03a8e552020ca096adadbf5e3cb1cd1cdd6acd3c161136b8a5737cdb4a8
   rspec (3.13.2) sha256=206284a08ad798e61f86d7ca3e376718d52c0bc944626b2349266f239f820587
   rspec-core (3.13.6) sha256=a8823c6411667b60a8bca135364351dda34cd55e44ff94c4be4633b37d828b2d

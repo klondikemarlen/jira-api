@@ -2,7 +2,7 @@
 
 require_relative "spec_helper"
 
-RSpec.describe Klondikemarlen::JiraApi::Client do
+RSpec.describe Marlens::JiraApi::Client do
   Response = Struct.new(:code, :body)
 
   let(:client_class) do

@@ -5,8 +5,8 @@ require "rbconfig"
 require "tempfile"
 
 require_relative "spec_helper"
-
-RSpec.describe Klondikemarlen::JiraApi::CLI do
+Marlens
+RSpec.describe Marlens::JiraApi::CLI do
   def run_cli(arguments, environment: {}, client: Object.new, client_factory: ->(env:) { client })
     described_class.run(
       arguments,

@@ -6,7 +6,7 @@ require "json"
 require "rspec"
 require "stringio"
 
-require "klondikemarlen/jira_api"
+require "marlens/jira_api"
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|

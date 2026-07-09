@@ -2,7 +2,7 @@
 
 require_relative "spec_helper"
 
-RSpec.describe Klondikemarlen::JiraApi::MarkdownToAdf do
+RSpec.describe Marlens::JiraApi::MarkdownToAdf do
   it "preserves headings, lists, marks, and images when converting markdown to ADF" do
     # Arrange
     captured_images = []

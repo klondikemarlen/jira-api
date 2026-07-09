@@ -6,7 +6,7 @@ require_relative "jira_api/markdown_to_adf"
 require_relative "jira_api/remote_image_attachment_uploader"
 require_relative "jira_api/cli"
 
-module Klondikemarlen
+module Marlens
   module JiraApi
   end
 end

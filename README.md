@@ -64,5 +64,5 @@ Preferred flow for issue and feature work:
 6. Merge the PR to `main` so GitHub records the review path.
 7. After merge, build and publish the gem version to RubyGems with `gem build marlens-jira-api.gemspec` and `gem push marlens-jira-api-<version>.gem`.
 8. Verify RubyGems lists the released version with `gem list --remote marlens-jira-api --exact --all`; if that output is stale, verify the specific version API at `https://rubygems.org/api/v2/rubygems/marlens-jira-api/versions/<version>.json`.
-9. Run an install or CLI smoke check against the published gem.
+9. Run an install or CLI smoke check against the published gem in an isolated temporary gem home; the project uses `gemspec` through Bundler and does not need its own gem installed locally.
 10. Keep one-off smoke cleanup helpers in `tmp/`, delete them before committing, and do not turn cleanup-only scripts into product API.

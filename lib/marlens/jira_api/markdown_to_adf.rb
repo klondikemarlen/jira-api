@@ -31,6 +31,25 @@ module Marlens
         }
       end
 
+      def self.external_media_single(url:, alt:, width:, height:)
+        {
+          "type" => "mediaSingle",
+          "attrs" => { "layout" => "center" },
+          "content" => [
+            {
+              "type" => "media",
+              "attrs" => {
+                "type" => "external",
+                "url" => url,
+                "alt" => alt,
+                "width" => width,
+                "height" => height,
+              },
+            },
+          ],
+        }
+      end
+
       def self.paragraph(text)
         new("").send(:paragraph_from_text, text)
       end

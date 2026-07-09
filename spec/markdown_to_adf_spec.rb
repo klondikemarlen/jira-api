@@ -43,6 +43,23 @@ RSpec.describe Marlens::JiraApi::MarkdownToAdf do
     )
   end
 
+  it "embeds resolver-provided Jira-hosted external media nodes" do
+    # Arrange
+    markdown = "![Ruby logo](https://raw.githubusercontent.com/github/explore/main/topics/ruby/ruby.png)"
+    resolved_media = described_class.external_media_single(
+      url: "https://example.atlassian.net/rest/api/3/attachment/content/26605",
+      alt: "Ruby logo",
+      width: 288,
+      height: 288
+    )
+
+    # Act
+    document = described_class.call(markdown) { resolved_media }
+
+    # Assert
+    expect(document.fetch("content")).to eq([resolved_media])
+  end
+
   it "routes mixed inline HTML image tags through the resolver without dropping surrounding text" do
     # Arrange
     captured_images = []

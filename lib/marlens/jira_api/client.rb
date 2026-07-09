@@ -2,7 +2,7 @@
 
 require "base64"
 require "json"
-require "multipart/post"
+require "net/http/post/multipart"
 require "net/http"
 require "uri"
 

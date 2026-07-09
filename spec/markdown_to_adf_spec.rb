@@ -42,4 +42,58 @@ RSpec.describe Marlens::JiraApi::MarkdownToAdf do
       html_image_height: "300"
     )
   end
+
+  it "routes mixed inline HTML image tags through the resolver without dropping surrounding text" do
+    # Arrange
+    captured_images = []
+    resolved_media = described_class.media_single(
+      id: "attachment-dashboard",
+      alt: "Dashboard with stacked active banners",
+      width: 1900,
+      height: 1178
+    )
+    markdown = <<~MARKDOWN
+      Dashboard with stacked active banners
+      http://localhost:8080/dashboard
+      <img width="1900" height="1178" alt="Dashboard with stacked active banners" src="https://github.com/user-attachments/assets/978779e2-f048-4c52-9da7-80f1e14ae542" />
+    MARKDOWN
+
+    # Act
+    document = described_class.call(markdown) do |image|
+      captured_images << image
+      resolved_media
+    end
+
+    # Assert
+    text_nodes = lambda do |node|
+      case node
+      when Hash
+        (node["type"] == "text" ? [node] : []) + Array(node["content"]).flat_map { |child| text_nodes.call(child) }
+      when Array
+        node.flat_map { |child| text_nodes.call(child) }
+      else
+        []
+      end
+    end
+    content_types = document.fetch("content").map { |node| node.fetch("type") }
+    paragraph = document.fetch("content").find { |node| node.fetch("type") == "paragraph" }
+    media_singles = document.fetch("content").select { |node| node.fetch("type") == "mediaSingle" }
+    paragraph_text = text_nodes.call(paragraph).map { |node| node.fetch("text") }.join
+
+    expect(captured_images).to eq(
+      [
+        {
+          url: "https://github.com/user-attachments/assets/978779e2-f048-4c52-9da7-80f1e14ae542",
+          alt: "Dashboard with stacked active banners",
+          width: "1900",
+          height: "1178",
+        },
+      ]
+    )
+    expect(content_types).to eq(["paragraph", "mediaSingle"])
+    expect(media_singles).to eq([resolved_media])
+    expect(paragraph_text).to include("Dashboard with stacked active banners")
+    expect(paragraph_text).to include("http://localhost:8080/dashboard")
+    expect(text_nodes.call(document)).not_to include(include("text" => include("<img")))
+  end
 end

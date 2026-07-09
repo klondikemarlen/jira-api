@@ -79,7 +79,7 @@ module Marlens
         when :heading
           heading(node)
         when :paragraph
-          paragraph(node)
+          paragraph_blocks(node)
         when :code_block
           code_block(node)
         when :list
@@ -105,19 +105,23 @@ module Marlens
         }
       end
 
-      def paragraph(node)
-        return image_block_for(children(node).first) if single_image_node?(node)
+      def paragraph_blocks(node)
+        return [image_block_for(children(node).first)] if single_image_node?(node)
 
-        {
-          "type" => "paragraph",
-          "content" => inline_content(node),
-        }
+        split_paragraph_around_html_images(node) || [paragraph_from_inline_content(inline_content(node))]
       end
 
       def paragraph_from_text(text)
         {
           "type" => "paragraph",
           "content" => [text_node(text)],
+        }
+      end
+
+      def paragraph_from_inline_content(content)
+        {
+          "type" => "paragraph",
+          "content" => content,
         }
       end
 
@@ -208,6 +212,43 @@ module Marlens
           width: attributes["width"],
           height: attributes["height"]
         )
+      end
+
+      def split_paragraph_around_html_images(node)
+        blocks = []
+        pending_content = []
+
+        children(node).each do |child|
+          image_block = inline_html_image_block(child)
+
+          if image_block.nil?
+            append_inline_content(pending_content, render_inline(child, []))
+          else
+            append_paragraph_block(blocks, pending_content)
+            pending_content = []
+            blocks << image_block
+          end
+        end
+        return nil if blocks.empty?
+
+        append_paragraph_block(blocks, pending_content)
+        blocks
+      end
+
+      def inline_html_image_block(node)
+        return nil unless node.type == :html_inline
+
+        html_image_block(node)
+      end
+
+      def append_paragraph_block(blocks, content)
+        blocks << paragraph_from_inline_content(content) unless content.empty?
+      end
+
+      def append_inline_content(content, inline)
+        return if inline.nil?
+
+        inline.is_a?(Array) ? content.concat(inline.compact) : content << inline
       end
 
       def resolved_image_block(url:, alt: nil, width: nil, height: nil)

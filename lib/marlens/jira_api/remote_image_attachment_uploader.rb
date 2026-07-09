@@ -20,8 +20,8 @@ module Marlens
         attachment = upload_image_attachment(image.fetch(:url))
         dimensions = attachment.fetch("dimensions")
 
-        MarkdownToAdf.media_single(
-          id: attachment.fetch("id"),
+        MarkdownToAdf.external_media_single(
+          url: attachment.fetch("content"),
           alt: image[:alt].to_s.strip.empty? ? attachment.fetch("filename") : image[:alt],
           width: image_dimension_value(image[:width], dimensions.fetch("width")),
           height: image_dimension_value(image[:height], dimensions.fetch("height"))
@@ -55,7 +55,7 @@ module Marlens
           )
 
           return {
-            "id" => attachment.fetch("id").to_s,
+            "content" => attachment.fetch("content").to_s,
             "filename" => attachment.fetch("filename", filename),
             "dimensions" => dimensions,
           }

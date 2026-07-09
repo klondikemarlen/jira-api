@@ -110,6 +110,46 @@ RSpec.describe Marlens::JiraApi::Client do
     )
   end
 
+  it "returns Jira attachment content URL when uploading an attachment" do
+    # Arrange
+    response_body = <<~JSON
+      [
+        {
+          "id": "26605",
+          "filename": "ruby.png",
+          "content": "https://example.atlassian.net/rest/api/3/attachment/content/26605"
+        }
+      ]
+    JSON
+    client = client_class.new(response: Response.new("200", response_body))
+
+    # Act
+    result = client.upload_attachment(
+      issue_key: "WRAPX-123",
+      io: StringIO.new("pngbytes"),
+      filename: "ruby.png",
+      content_type: "image/png"
+    )
+
+    # Assert
+    request = client.requests.fetch(0).fetch(:request)
+    expect(
+      method: request.method,
+      path: client.requests.fetch(0).fetch(:uri).request_uri,
+      token: request["X-Atlassian-Token"],
+      result: result
+    ).to eq(
+      method: "POST",
+      path: "/rest/api/3/issue/WRAPX-123/attachments",
+      token: "no-check",
+      result: {
+        "id" => "26605",
+        "filename" => "ruby.png",
+        "content" => "https://example.atlassian.net/rest/api/3/attachment/content/26605",
+      }
+    )
+  end
+
   it "deletes the specific comment endpoint when deleting a comment" do
     # Arrange
     client = client_class.new(response: Response.new("204", ""))

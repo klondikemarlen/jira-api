@@ -7,13 +7,24 @@ require "uri"
 
 module Marlens
   module JiraApi
+    class ImageUploadError < StandardError
+      attr_reader :failure
+
+      def initialize(failure)
+        @failure = failure
+        super("Failed to upload image #{failure.fetch(:url)}: #{failure.fetch(:error_class)}: #{failure.fetch(:error_message)}")
+      end
+    end
+
     class RemoteImageAttachmentUploader
       MAX_REDIRECTS = 5
 
-      def initialize(client:, issue_key:, allowed_hosts:)
+      def initialize(client:, issue_key:, allowed_hosts:, strict: false, failures: nil)
         @allowed_hosts = allowed_hosts
         @client = client
+        @failures = failures
         @issue_key = issue_key
+        @strict = strict
       end
 
       def media_node_for(image)
@@ -27,6 +38,10 @@ module Marlens
           height: image_dimension_value(image[:height], dimensions.fetch("height"))
         )
       rescue StandardError => error
+        failure = { url: image[:url], alt: image[:alt], error_class: error.class.name, error_message: error.message }
+        @failures << failure if @failures
+        raise ImageUploadError.new(failure) if @strict
+
         warn "Failed to upload image #{image[:url]}: #{error.class}: #{error.message}"
         MarkdownToAdf.paragraph("#{image[:alt] || "Image"}: #{image[:url]}")
       end

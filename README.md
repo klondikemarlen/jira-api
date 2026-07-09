@@ -50,6 +50,8 @@ jira-comment delete --issue-key WRAPX-123 --comment-id 10001
 
 Remote Markdown image URLs are advanced opt-in behavior. Pass `allowed_image_hosts:` in Ruby or repeat `--image-host` in the CLI only when you intentionally want the gem to fetch images from trusted hosts, upload them to Jira, and convert them into Jira media attachments.
 
+Ruby callers that need to detect degraded images can pass an array via `image_upload_failures:`. Add `strict_images: true` in Ruby or `--strict-images` in the CLI to raise `Marlens::JiraApi::ImageUploadError` instead of falling back to `Alt text: URL` when an image cannot be fetched or uploaded.
+
 ## Feature and Issue Workflow
 
 Preferred flow for issue and feature work:

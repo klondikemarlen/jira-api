@@ -54,20 +54,24 @@ module Marlens
         raise "Failed to delete Jira comment #{comment_id} for #{issue_key}: #{response.code} #{response.body}"
       end
 
-      def create_markdown_comment(issue_key:, markdown:, allowed_image_hosts: [])
+      def create_markdown_comment(issue_key:, markdown:, allowed_image_hosts: [], strict_images: false, image_upload_failures: nil)
         document = markdown_document(
           issue_key: issue_key,
           markdown: markdown,
-          allowed_image_hosts: allowed_image_hosts
+          allowed_image_hosts: allowed_image_hosts,
+          strict_images: strict_images,
+          image_upload_failures: image_upload_failures
         )
         create_comment(issue_key: issue_key, document: document)
       end
 
-      def update_markdown_comment(issue_key:, comment_id:, markdown:, allowed_image_hosts: [])
+      def update_markdown_comment(issue_key:, comment_id:, markdown:, allowed_image_hosts: [], strict_images: false, image_upload_failures: nil)
         document = markdown_document(
           issue_key: issue_key,
           markdown: markdown,
-          allowed_image_hosts: allowed_image_hosts
+          allowed_image_hosts: allowed_image_hosts,
+          strict_images: strict_images,
+          image_upload_failures: image_upload_failures
         )
         update_comment(issue_key: issue_key, comment_id: comment_id, document: document)
       end
@@ -94,11 +98,13 @@ module Marlens
 
       private
 
-      def markdown_document(issue_key:, markdown:, allowed_image_hosts:)
+      def markdown_document(issue_key:, markdown:, allowed_image_hosts:, strict_images:, image_upload_failures:)
         image_uploader = RemoteImageAttachmentUploader.new(
           client: self,
           issue_key: issue_key,
-          allowed_hosts: allowed_image_hosts
+          allowed_hosts: allowed_image_hosts,
+          strict: strict_images,
+          failures: image_upload_failures
         )
         MarkdownToAdf.call(markdown) do |image|
           image_uploader.media_node_for(image)

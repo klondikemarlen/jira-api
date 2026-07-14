@@ -30,6 +30,16 @@ module Marlens
         json_request(Net::HTTP::Get.new(uri), uri)
       end
 
+      def get_issue(issue_key:)
+        uri = api_uri("/issue/#{issue_key}")
+        json_request(Net::HTTP::Get.new(uri), uri)
+      end
+
+      def list_remote_links(issue_key:)
+        uri = api_uri("/issue/#{issue_key}/remotelink")
+        json_request(Net::HTTP::Get.new(uri), uri)
+      end
+
       def create_comment(issue_key:, document:)
         uri = api_uri("/issue/#{issue_key}/comment")
         request = Net::HTTP::Post.new(uri)

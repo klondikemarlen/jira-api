@@ -87,6 +87,65 @@ RSpec.describe Marlens::JiraApi::Client do
     )
   end
 
+  it "gets a Jira issue" do
+    # Arrange
+    client = client_class.new(response: Response.new("200", '{"key":"WRAPX-123"}'))
+
+    # Act
+    result = client.get_issue(issue_key: "WRAPX-123")
+
+    # Assert
+    request = client.requests.fetch(0).fetch(:request)
+    expect(
+      method: request.method,
+      path: client.requests.fetch(0).fetch(:uri).request_uri,
+      result: result
+    ).to eq(
+      method: "GET",
+      path: "/rest/api/3/issue/WRAPX-123",
+      result: { "key" => "WRAPX-123" }
+    )
+  end
+
+  it "gets a Jira issue remote-link collection" do
+    # Arrange
+    client = client_class.new(response: Response.new("200", '[{"id":10001}]'))
+
+    # Act
+    result = client.list_remote_links(issue_key: "WRAPX-123")
+
+    # Assert
+    request = client.requests.fetch(0).fetch(:request)
+    expect(
+      method: request.method,
+      path: client.requests.fetch(0).fetch(:uri).request_uri,
+      result: result
+    ).to eq(
+      method: "GET",
+      path: "/rest/api/3/issue/WRAPX-123/remotelink",
+      result: [{ "id" => 10001 }]
+    )
+  end
+
+  it "raises response details for an unsuccessful Jira issue read" do
+    # Arrange
+    client = client_class.new(response: Response.new("404", '{"errorMessages":["Issue Does Not Exist"]}'))
+
+    # Act / Assert
+    expect { client.get_issue(issue_key: "WRAPX-123") }.to raise_error(
+      RuntimeError,
+      'Jira API request failed: GET /rest/api/3/issue/WRAPX-123: 404 {"errorMessages":["Issue Does Not Exist"]}'
+    )
+  end
+
+  it "raises JSON::ParserError for a malformed successful remote-link response" do
+    # Arrange
+    client = client_class.new(response: Response.new("200", "{"))
+
+    # Act / Assert
+    expect { client.list_remote_links(issue_key: "WRAPX-123") }.to raise_error(JSON::ParserError)
+  end
+
   it "puts an ADF document to the specific comment endpoint when updating a comment" do
     # Arrange
     client = client_class.new(response: Response.new("200", '{"id":"10001"}'))

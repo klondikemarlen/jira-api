@@ -21,6 +21,9 @@ client = Marlens::JiraApi::Client.new(
 
 comments = client.list_comments(issue_key: "WRAPX-123")
 comment = client.get_comment(issue_key: "WRAPX-123", comment_id: "10001")
+issue = client.get_issue(issue_key: "WRAPX-123")
+remote_links = client.list_remote_links(issue_key: "WRAPX-123")
+
 
 created = client.create_markdown_comment(
   issue_key: "WRAPX-123",
@@ -35,6 +38,10 @@ client.update_markdown_comment(
 
 client.delete_comment(issue_key: "WRAPX-123", comment_id: created.fetch("id"))
 ```
+
+### Read errors
+
+`get_issue` and `list_remote_links` return parsed Jira JSON. A non-2xx response raises `RuntimeError` with the HTTP method, request path, status, and response body. A successful response with malformed JSON raises `JSON::ParserError`.
 
 ## CLI
 
